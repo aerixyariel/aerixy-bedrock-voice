@@ -217,5 +217,5 @@ app.post('/', upload.array(), async function (req, res) {
 })
 
 app.listen(process.env.PORT || 3000, () => {
-	console.log(`Example app listening on port http://localhost:${port}`)
+	console.log(`[aerixy-bedrock-voice] AeVoBot app is listening on port {process.env.PORT || 3000}`)
 })
