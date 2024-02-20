@@ -196,9 +196,15 @@ app.post('/', upload.array(), async function (req, res) {
 
 		// delete channel
 		for (let oldCh in CHANNELS) {
+			let lobby = guild.channels.cache.find(c=>c.id==process.env.LOBBYID);
 			if (!tempNameNewCh.includes(oldCh) && oldCh != 'lobby') {
 				const delCh = guild.channels.cache.find(c=>c.id==CHANNELS[oldCh])
-				if (delCh) await guild.channels.delete(delCh).catch(() => {});
+				if (delCh) {
+					guild.members.cache.each(async (member) => {
+						if (member?.voice.channelId == delCh.id) await member?.voice.setChannel(lobby).catch(() => {});
+					})
+					await guild.channels.delete(delCh).catch(() => {});
+				}
 			}
 		}
 
