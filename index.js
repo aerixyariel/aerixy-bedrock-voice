@@ -201,9 +201,8 @@ app.post('/', upload.array(), async function (req, res) {
 				const delCh = guild.channels.cache.find(c=>c.id==CHANNELS[oldCh])
 				if (delCh) {
 					guild.members.cache.each(async (member) => {
-						if (member?.voice.channelId == delCh.id) await member?.voice.setChannel(lobby).catch(() => {});
+						if (member?.voice.channelId == delCh.id) await member?.voice.setChannel(lobby).then(async () => await guild.channels.delete(delCh).catch(() => {})).catch(() => {});
 					})
-					await guild.channels.delete(delCh).catch(() => {});
 				}
 			}
 		}
