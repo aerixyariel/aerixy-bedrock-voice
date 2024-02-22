@@ -61,22 +61,29 @@ client.once(Events.VoiceStateUpdate, async (oS, nS) => {
 			.setImage('https://i.imgur.com/AfFp7pu.png')
 			.setTimestamp()
 			.setFooter({ text: 'Some footer text here', iconURL: 'https://i.imgur.com/AfFp7pu.png' });
-			client.users.send(nS.id, { embeds: [Embeds] });
+			client.users.send(nS.id, { embeds: [Embeds] }).catch(() => {});
 	}
+	/* if (nS.channel.parentId == process.env.VCID) {
+		if (nS.channelId == process.env.LOBBYID) {
+			nS.member.voice.setMute(true).catch(() => {});
+		} else {
+			nS.member.voice.setMute(false).catch(() => {});
+		}
+	} */
 });
 
 client.on(Events.ClientReady, async (cready) => {
-	const guild = await cready.guilds.fetch(process.env.GUILDID)
-	const lobby = await guild.channels.fetch(process.env.LOBBYID)
+	const guild = await cready.guilds.fetch(process.env.GUILDID).catch(() => {});
+	const lobby = await guild.channels.fetch(process.env.LOBBYID).catch(() => {});
 	if (!guild) return;
 	guild.channels.cache.each(async channel => {
 		if (channel.parentId == process.env.VCID && channel.id != process.env.LOBBYID) {
 			guild.members.cache.each(async member => {
 				if (member?.voice.channelId == channel.id) {
-					if (lobby?.type == ChannelType.GuildVoice) await member.voice.setChannel(lobby);
+					if (lobby?.type == ChannelType.GuildVoice) await member.voice.setChannel(lobby).catch(() => {});
 				}
 			})
-			await channel.delete();
+			await channel.delete().catch(() => {});
 		}
 	})
 });
@@ -92,7 +99,7 @@ client.on(Events.InteractionCreate, async interaction => {
 		return;
 	}
 
-	await command.execute({ interaction, guilds: client.guilds });
+	await command.execute({ interaction, guilds: client.guilds }).catch(() => {});
 
 	/*try {
 		await command.execute(interaction);
@@ -124,7 +131,7 @@ const rest = new REST().setToken(process.env.TOKEN);
 		const data = await rest.put(
       Routes.applicationCommands(process.env.CLIENTID),
       { body: dataCommands },
-    );
+    ).catch(() => {});
 
 		console.log(`Successfully reloaded ${data.length} application (/) commands.`);
 	} catch (error) {
@@ -151,9 +158,9 @@ app.post('/', upload.array(), async function (req, res) {
 	const data = await req.body;
 	console.log(data);
 	(async () => {
-		var guild = await client.guilds.fetch(process.env.GUILDID);
-		const parent = await guild.channels.fetch(process.env.VCID);
-		const lobby = await guild.channels.fetch(process.env.LOBBYID);
+		var guild = await client.guilds.fetch(process.env.GUILDID).catch(() => {});
+		const parent = await guild.channels.fetch(process.env.VCID).catch(() => {});
+		const lobby = await guild.channels.fetch(process.env.LOBBYID).catch(() => {});
 
 		const tempNameNewCh = Object.keys(data);
 
@@ -166,7 +173,7 @@ app.post('/', upload.array(), async function (req, res) {
 					name: Ch,
 					type: ChannelType.GuildVoice,
 					parent: parent.id,
-				});
+				}).catch(() => {});
 			}
 			CHANNELS[Ch] = channel.id;
 			for (let player of data[Ch]) {
@@ -201,6 +208,19 @@ app.post('/', upload.array(), async function (req, res) {
 				if (delCh) await guild.channels.delete(delCh).catch(() => {});
 			}
 		}
+
+		// muted 
+		guild.members.cache.each(member => {
+			if (member?.voice) {
+				if (member?.voice.channelId == process.env.LOBBYID) {
+					member.voice.setMute(true).catch(() => {});
+				} else {
+					member.voice.setMute(false).catch(() => {});
+				}
+			}
+		})
+
+
 		var whiteList = []
 		guild.members.cache.each(member => {
 			if (member?.voice) {
@@ -216,5 +236,5 @@ app.post('/', upload.array(), async function (req, res) {
 })
 
 app.listen(process.env.PORT || 3000, () => {
-	console.log(`[aerixy-bedrock-voice] AeVoBot app is listening on port {process.env.PORT || 3000}`)
+	console.log(`[aerixy-bedrock-voice] AeVoBot app is listening on port ${process.env.PORT || 3000}`)
 })
